@@ -13,13 +13,18 @@ export default function useCurrentIndex(initialIndex = 0, length) {
     setCurrentIndex(i => clamp(i - 1))
   }
 
-  const goTo = i => {
-    setCurrentIndex(clamp(i))
+  const advancedGoto = (i, fallback) => {
+    const clamped = clamp(i)
+    if (clamped === i) {
+      setCurrentIndex(clamped)
+    } else if (fallback) {
+      fallback()
+    }
   }
 
   return {
     currentIndex,
-    goTo,
+    advancedGoto,
     goNext,
     goPrev,
   }

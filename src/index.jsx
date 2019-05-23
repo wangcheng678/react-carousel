@@ -7,7 +7,7 @@ import Nav from './components/Nav'
 
 export default function Carousel({children, className, step}) {
   const slideItems = Children.toArray(children)
-  const {currentIndex, goNext, goPrev, goTo} = useCurrentIndex(
+  const {currentIndex, goNext, goPrev, advancedGoto} = useCurrentIndex(
     0,
     slideItems.length
   )
@@ -19,7 +19,7 @@ export default function Carousel({children, className, step}) {
         className={className}
         step={step}
         slideItems={slideItems}
-        goTo={goTo}
+        advancedGoto={advancedGoto}
       />
       <Nav currentIndex={currentIndex} goNext={goNext} goPrev={goPrev} />
     </Fragment>
