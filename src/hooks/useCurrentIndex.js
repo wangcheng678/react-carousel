@@ -15,10 +15,10 @@ export default function useCurrentIndex(initialIndex = 0, length) {
 
   const advancedGoto = (i, fallback) => {
     const clamped = clamp(i)
-    if (clamped === i) {
-      setCurrentIndex(clamped)
-    } else if (fallback) {
+    if (clamped === currentIndex && fallback) {
       fallback()
+    } else {
+      setCurrentIndex(clamped)
     }
   }
 
