@@ -1,6 +1,7 @@
 import React from 'react'
 import T from 'prop-types'
 import {useSpring, animated} from 'react-spring'
+import {useGesture} from 'react-use-gesture'
 import DirectionContext, {
   isHorizontal,
   isLeftToRight,
@@ -21,21 +22,51 @@ const COMMON_STYLES = {
   padding: '0',
 }
 
-const useTransformStyle = (currentIndex, step) => {
+const useTransformStyle = (currentIndex, step, axis, sign) => {
+  const s = sign * currentIndex * step
+
+  const [props, set] = useSpring(() => ({s}))
+
+  React.useEffect(() => {
+    set({s, immediate: false})
+  }, [s, set])
+
+  const transform = props.s.interpolate(i => `translate${axis}(${i}px)`)
+  const getS = () => props.s.getValue()
+  const resetPosition = () => set({s, immediate: false})
+  const setPosition = i => set({s: i, immediate: true})
+  return {transform, getS, setPosition, resetPosition}
+}
+
+const Slides = ({currentIndex, slideItems, className, step, advancedGoto}) => {
   const direction = React.useContext(DirectionContext)
   const axis = isHorizontal(direction) ? 'X' : 'Y' // 看第一位水平还是竖直
   const sign = isLeftToRight(direction) ? -1 : 1 // 看最后一位上还是下
+  const {transform, getS, setPosition, resetPosition} = useTransformStyle(
+    currentIndex,
+    step,
+    axis,
+    sign
+  )
 
-  const {transform} = useSpring({
-    transform: `translate${axis}(${sign * currentIndex * step}px)`,
+  const getNewIndex = x => Math.round(x / sign / step)
+
+  const bind = useGesture({
+    onDrag: ({delta, last, temp = getS()}) => {
+      const ds = isHorizontal(direction) ? delta[0] : delta[1]
+      const newS = ds + temp
+      if (last) {
+        const newIndex = getNewIndex(newS) // clamp
+        if (newIndex === currentIndex) {
+          resetPosition()
+        }
+        advancedGoto(newIndex, resetPosition)
+      } else {
+        setPosition(newS)
+      }
+      return temp
+    },
   })
-
-  return transform
-}
-
-const Slides = ({currentIndex, slideItems, className, step}) => {
-  const direction = React.useContext(DirectionContext)
-  const transform = useTransformStyle(currentIndex, step)
 
   const wrapperStyle = {
     ...COMMON_STYLES,
@@ -51,7 +82,7 @@ const Slides = ({currentIndex, slideItems, className, step}) => {
 
   return (
     <div className={className}>
-      <animated.div style={wrapperStyle}>
+      <animated.div style={wrapperStyle} {...bind()}>
         {slideItems.map((child, index) => (
           <div
             key={index}
@@ -71,6 +102,7 @@ Slides.propTypes = {
   slideItems: T.arrayOf(T.node).isRequired,
   className: T.string,
   step: T.number.isRequired,
+  advancedGoto: T.func.isRequired,
 }
 
 export default Slides
