@@ -1,15 +1,15 @@
 import React from 'react'
 import {render} from 'react-dom'
-import BusinessCard from '../src/index'
+import Carousel from '../src/index'
 
 const app = (
-  <BusinessCard className="container" itemWidth={200}>
+  <Carousel className="container" step={200}>
     <div>Slide 1</div>
     <div>Slide 2</div>
     <div>Slide 3</div>
     <div>Slide 4</div>
     <div>Slide 5</div>
-  </BusinessCard>
+  </Carousel>
 )
 
 render(app, document.getElementById('app'))
