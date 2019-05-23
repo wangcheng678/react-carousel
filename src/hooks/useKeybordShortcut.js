@@ -8,8 +8,7 @@ const KEY_MAP = {
   ArrowUp: 0b11,
 }
 
-// TODO 只在 Slides 聚焦时监听
-function getKeyEventResult(event, direction) {
+const getKeyEventResult = (event, direction) => {
   const {key, ctrlKey, shiftKey, altKey, metaKey} = event
 
   if (ctrlKey || shiftKey || altKey || metaKey) return -1
@@ -21,33 +20,37 @@ function getKeyEventResult(event, direction) {
   return keyValue ^ direction
 }
 
-export default function useKeybordShortcut({goNext, goPrev}) {
+// TODO 只在 Slides 聚焦时监听
+const useKeybordShortcut = ({goNext, goPrev, useKeyUp}) => {
   const direction = useContext(DirectionContext)
-  const keyUpCallback = event => {
-    const result = getKeyEventResult(event, direction)
-
-    if (result === 0) {
-      goNext()
-      event.preventDefault()
-    } else if (result === 1) {
-      goPrev()
-      event.preventDefault()
-    }
-  }
-
-  const keyDownCallback = event => {
-    const result = getKeyEventResult(event, direction)
-    if (result === 0 || result === 1) {
-      event.preventDefault()
-    }
-  }
+  const targetType = useKeyUp ? 'keyup' : 'keydown'
 
   useEffect(() => {
-    document.addEventListener('keyup', keyUpCallback)
-    document.addEventListener('keydown', keyDownCallback)
-    return () => {
-      document.removeEventListener('keyup', keyUpCallback)
-      document.removeEventListener('keydown', keyDownCallback)
+    const callback = event => {
+      const result = getKeyEventResult(event, direction)
+      const isTargetType = targetType === event.type
+
+      if (result === 0) {
+        if (isTargetType) {
+          goNext()
+        }
+        event.preventDefault()
+      } else if (result === 1) {
+        if (isTargetType) {
+          goPrev()
+        }
+        event.preventDefault()
+      }
     }
-  })
+
+    document.addEventListener('keyup', callback)
+    document.addEventListener('keydown', callback)
+
+    return () => {
+      document.removeEventListener('keyup', callback)
+      document.removeEventListener('keydown', callback)
+    }
+  }, [direction, goNext, goPrev, targetType])
 }
+
+export default useKeybordShortcut
