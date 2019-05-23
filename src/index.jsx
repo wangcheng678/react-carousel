@@ -2,10 +2,10 @@ import React, {Children, Fragment} from 'react'
 import T from 'prop-types'
 import useCurrentIndex from './hooks/useCurrentIndex'
 import useKeybordShortcut from './hooks/useKeybordShortcut'
-import Slides from './components/TouchSlides'
+import Slides from './components/Slides'
 import Nav from './components/Nav'
 
-export default function Carousel({children, className, itemWidth}) {
+export default function Carousel({children, className, step}) {
   const slideItems = Children.toArray(children)
   const {currentIndex, goNext, goPrev, goTo} = useCurrentIndex(
     0,
@@ -17,7 +17,7 @@ export default function Carousel({children, className, itemWidth}) {
       <Slides
         currentIndex={currentIndex}
         className={className}
-        itemWidth={itemWidth}
+        step={step}
         slideItems={slideItems}
         goTo={goTo}
       />
@@ -29,5 +29,5 @@ export default function Carousel({children, className, itemWidth}) {
 Carousel.propTypes = {
   children: T.node.isRequired,
   className: T.string,
-  itemWidth: T.number.isRequired,
+  step: T.number.isRequired,
 }

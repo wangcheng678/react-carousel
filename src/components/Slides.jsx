@@ -1,4 +1,4 @@
-import React, {useRef, useEffect, useContext, useMemo} from 'react'
+import React from 'react'
 import T from 'prop-types'
 import {useSpring, animated} from 'react-spring'
 import DirectionContext, {
@@ -13,72 +13,55 @@ const FLEX_DIR_MAP_LTR = {
   0b11: 'column-reverse', // TODO: 对齐 bug
 }
 
-const getTransform = (s, axis, sign, step) => {
-  return `translate${axis}(${sign * s * step}px)`
-}
-
-const getCommonStyle = direction => ({
+const COMMON_STYLES = {
   display: 'flex',
   alignContent: 'flex-start',
-  flexDirection: FLEX_DIR_MAP_LTR[direction],
   listStyle: 'none',
   margin: '0',
   padding: '0',
-})
+}
 
-function useTransformStyle(currentIndex, itemWidth) {
-  const lastIndexRef = useRef(currentIndex)
-  const direction = useContext(DirectionContext)
+const useTransformStyle = (currentIndex, step) => {
+  const direction = React.useContext(DirectionContext)
+  const axis = isHorizontal(direction) ? 'X' : 'Y' // 看第一位水平还是竖直
+  const sign = isLeftToRight(direction) ? -1 : 1 // 看最后一位上还是下
 
-  useEffect(() => {
-    lastIndexRef.current = currentIndex
-  }, [currentIndex])
-
-  const interpolateTransform = useMemo(() => {
-    const axis = isHorizontal(direction) ? 'X' : 'Y' // 看第一位水平还是竖直
-    const sign = isLeftToRight(direction) ? -1 : 1 // 看最后一位上还是下
-    return i => getTransform(i, axis, sign, itemWidth)
-  }, [direction, itemWidth])
-
-  const spring = useSpring({
-    from: {s: lastIndexRef.current},
-    to: {s: currentIndex},
+  const {transform} = useSpring({
+    transform: `translate${axis}(${sign * currentIndex * step}px)`,
   })
 
-  return spring.s.interpolate(interpolateTransform)
+  return transform
 }
 
-function useCommonStyle() {
-  const direction = useContext(DirectionContext)
-  return getCommonStyle(direction)
-}
+const Slides = ({currentIndex, slideItems, className, step}) => {
+  const direction = React.useContext(DirectionContext)
+  const transform = useTransformStyle(currentIndex, step)
 
-export default function Slides({
-  currentIndex,
-  slideItems,
-  className,
-  itemWidth,
-}) {
-  const transform = useTransformStyle(currentIndex, itemWidth)
-  const commonStyle = useCommonStyle()
-  const style = {...commonStyle, transform}
+  const wrapperStyle = {
+    ...COMMON_STYLES,
+    flexDirection: FLEX_DIR_MAP_LTR[direction],
+    transform,
+  }
+
+  const itemStyle = {
+    width: `${step}px`,
+    height: `${step}px`,
+    flex: 'none',
+  }
+
   return (
     <div className={className}>
-      <animated.ul style={style}>
+      <animated.div style={wrapperStyle}>
         {slideItems.map((child, index) => (
-          <li
+          <div
             key={index}
-            style={{
-              color: currentIndex === index ? 'red' : 'black',
-              width: `${itemWidth}px`,
-              height: `${itemWidth}px`,
-              flex: 'none',
-            }}
+            data-active={currentIndex === index ? true : null}
+            style={itemStyle}
           >
             {child}
-          </li>
+          </div>
         ))}
-      </animated.ul>
+      </animated.div>
     </div>
   )
 }
@@ -87,5 +70,7 @@ Slides.propTypes = {
   currentIndex: T.number.isRequired,
   slideItems: T.arrayOf(T.node).isRequired,
   className: T.string,
-  itemWidth: T.number.isRequired,
+  step: T.number.isRequired,
 }
+
+export default Slides
