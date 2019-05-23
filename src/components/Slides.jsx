@@ -57,9 +57,6 @@ const Slides = ({currentIndex, slideItems, className, step, advancedGoto}) => {
       const newS = ds + temp
       if (last) {
         const newIndex = getNewIndex(newS) // clamp
-        if (newIndex === currentIndex) {
-          resetPosition()
-        }
         advancedGoto(newIndex, resetPosition)
       } else {
         setPosition(newS)
